@@ -1,0 +1,6 @@
+[submodule "extlib/tlx"]
+	path = extlib/tlx
+	url = https://github.com/tlx/tlx.git
+[submodule "sort/ips4o"]
+	path = sort/ips4o
+	url = https://github.com/SaschaWitt/ips4o.git
