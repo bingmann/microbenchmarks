@@ -75,6 +75,8 @@ if(CMAKE_USE_PTHREADS_INIT)
   set(MBM_LINK_LIBRARIES pthread ${MBM_LINK_LIBRARIES})
 endif()
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+
 ### use TLX ###
 
 add_subdirectory(extlib/tlx)

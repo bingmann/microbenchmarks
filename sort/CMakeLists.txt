@@ -7,6 +7,6 @@
 ################################################################################
 
 add_executable(mbm_sort mbm_sort.cpp)
-target_link_libraries(mbm_sort ${MBM_LINK_LIBRARIES})
+target_link_libraries(mbm_sort ${MBM_LINK_LIBRARIES} atomic)
 
 ################################################################################

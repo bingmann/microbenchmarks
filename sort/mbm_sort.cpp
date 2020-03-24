@@ -99,6 +99,35 @@ public:
 };
 
 /******************************************************************************/
+// Parallel Sorters
+
+class IPS4oParallelSort : public SortBenchmark {
+public:
+    IPS4oParallelSort(size_t size, size_t rep) : SortBenchmark(size, rep) {
+    }
+    const char* name() const final {
+        return "ips4o::parallel_sort";
+    }
+    void run() {
+        ips4o::parallel::sort(vec_.begin(), vec_.end(), cmp_);
+    }
+};
+
+#include <tlx/sort/parallel_mergesort.hpp>
+
+class MCSTLParallelMergesort : public SortBenchmark {
+public:
+    MCSTLParallelMergesort(size_t size, size_t rep) : SortBenchmark(size, rep) {
+    }
+    const char* name() const final {
+        return "mcstl::parallel_sort";
+    }
+    void run() {
+        tlx::parallel_mergesort(vec_.begin(), vec_.end(), cmp_);
+    }
+};
+
+/******************************************************************************/
 
 template <typename Benchmark>
 void test_size(size_t size, size_t rep) {
@@ -125,6 +154,9 @@ int main() {
             test_size<StdSort>(size, rep);
             test_size<StdStableSort>(size, rep);
             test_size<IPS4oSort>(size, rep);
+
+            test_size<IPS4oParallelSort>(size, rep);
+            test_size<MCSTLParallelMergesort>(size, rep);
         }
     }
 
