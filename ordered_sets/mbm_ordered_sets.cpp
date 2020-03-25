@@ -16,16 +16,19 @@
 #include <iostream>
 #include <random>
 
+#include <boost/container/flat_set.hpp>
 #include <set>
 #include <tlx/container/btree_multiset.hpp>
 #include <tlx/container/splay_tree.hpp>
-#include <boost/container/flat_set.hpp>
 #include <unordered_set>
 
+#include <boost/container/flat_map.hpp>
 #include <map>
 #include <tlx/container/btree_multimap.hpp>
-#include <boost/container/flat_map.hpp>
 #include <unordered_map>
+
+#include "cpp-btree-1.0.1/btree_set.h"
+#include "cpp-btree-1.0.1/btree_map.h"
 
 /******************************************************************************/
 // Settings
@@ -94,7 +97,7 @@ public:
         for (size_t i = 0; i < size_; i++)
             set.insert(rng());
 
-        die_unless(set.size() == size_);
+        die_unless(static_cast<size_t>(set.size()) == size_);
     }
 };
 
@@ -117,7 +120,7 @@ public:
         for (size_t i = 0; i < size_; i++)
             set.insert(rng());
 
-        die_unless(set.size() == size_);
+        die_unless(static_cast<size_t>(set.size()) == size_);
 
         rng.seed(seed);
         for (size_t i = 0; i < size_; i++)
@@ -127,7 +130,7 @@ public:
         for (size_t i = 0; i < size_; i++)
             set.erase(set.find(rng()));
 
-        die_unless(set.empty());
+        die_unless(static_cast<size_t>(set.size()) == size_);
     }
 };
 
@@ -147,7 +150,7 @@ public:
         for (size_t i = 0; i < size_; i++)
             set.insert(rng());
 
-        die_unless(set.size() == size_);
+        die_unless(static_cast<size_t>(set.size()) == size_);
     }
 
     void run() {
@@ -161,13 +164,13 @@ public:
 template <template <typename SetType> class TestClass>
 struct TestFactory_Set {
     //! Test the multiset red-black tree from STL
-    typedef TestClass<std::multiset<size_t>> StdSet;
+    using StdSet = TestClass<std::multiset<size_t>>;
 
     //! Test the multiset red-black tree from STL
-    typedef TestClass<tlx::splay_multiset<size_t>> SplaySet;
+    using SplaySet = TestClass<tlx::splay_multiset<size_t>>;
 
     //! Test the unordered_set from STL TR1
-    typedef TestClass<std::unordered_multiset<size_t>> UnorderedSet;
+    using UnorderedSet = TestClass<std::unordered_multiset<size_t>>;
 
     //! Test the B+ tree with a specific leaf/inner slots
     template <int Slots>
@@ -177,6 +180,12 @@ struct TestFactory_Set {
             : TestClass<tlx::btree_multiset<size_t, std::less<size_t>,
                   struct btree_traits_speed<Slots, Slots>>>(n, cn) {}
     };
+
+    //! Test boost::flat_set
+    using BoostFlatSet = TestClass<boost::container::flat_multiset<size_t>>;
+
+    //! Test Google's btree_set
+    using GoogleBTreeSet = TestClass<btree::btree_set<size_t>>;
 
     //! Run tests on all set types
     void call_testrunner(size_t size);
@@ -206,7 +215,7 @@ public:
             map.insert(std::make_pair(r, r));
         }
 
-        die_unless(map.size() == size_);
+        die_unless(static_cast<size_t>(map.size()) == size_);
     }
 };
 
@@ -231,7 +240,7 @@ public:
             map.insert(std::make_pair(r, r));
         }
 
-        die_unless(map.size() == size_);
+        die_unless(static_cast<size_t>(map.size()) == size_);
 
         rng.seed(seed);
         for (size_t i = 0; i < size_; i++)
@@ -263,7 +272,7 @@ public:
             map.insert(std::make_pair(r, r));
         }
 
-        die_unless(map.size() == size_);
+        die_unless(static_cast<size_t>(map.size()) == size_);
     }
 
     void run() {
@@ -277,10 +286,10 @@ public:
 template <template <typename MapType> class TestClass>
 struct TestFactory_Map {
     //! Test the multimap red-black tree from STL
-    typedef TestClass<std::multimap<size_t, size_t>> StdMap;
+    using StdMap = TestClass<std::multimap<size_t, size_t>>;
 
     //! Test the unordered_map from STL
-    typedef TestClass<std::unordered_multimap<size_t, size_t>> UnorderedMap;
+    using UnorderedMap = TestClass<std::unordered_multimap<size_t, size_t>>;
 
     //! Test the B+ tree with a specific leaf/inner slots
     template <int Slots>
@@ -291,6 +300,13 @@ struct TestFactory_Map {
             : TestClass<tlx::btree_multimap<size_t, size_t, std::less<size_t>,
                   struct btree_traits_speed<Slots, Slots>>>(n, cn) {}
     };
+
+    //! Test boost::flat_map
+    using BoostFlatMap =
+        TestClass<boost::container::flat_multimap<size_t, size_t>>;
+
+    //! Test Google's btree_set
+    using GoogleBTreeMap = TestClass<btree::btree_map<size_t, size_t>>;
 
     //! Run tests on all map types
     void call_testrunner(size_t size);
@@ -334,6 +350,10 @@ void TestFactory_Set<TestClass>::call_testrunner(size_t size) {
     testrunner_loop<BtreeSet<64>>(size, "tlx::btree_multiset<064>");
     testrunner_loop<BtreeSet<128>>(size, "tlx::btree_multiset<128>");
     testrunner_loop<BtreeSet<256>>(size, "tlx::btree_multiset<256>");
+
+    testrunner_loop<BoostFlatSet>(size, "boost::flat_multiset");
+
+    testrunner_loop<GoogleBTreeSet>(size, "google btree_set");
 }
 
 template <template <typename Type> class TestClass>
@@ -349,6 +369,10 @@ void TestFactory_Map<TestClass>::call_testrunner(size_t size) {
     testrunner_loop<BtreeMap<64>>(size, "tlx::btree_multimap<064>");
     testrunner_loop<BtreeMap<128>>(size, "tlx::btree_multimap<128>");
     testrunner_loop<BtreeMap<256>>(size, "tlx::btree_multimap<256>");
+
+    testrunner_loop<BoostFlatMap>(size, "boost::flat_multimap");
+
+    testrunner_loop<GoogleBTreeMap>(size, "google btree_map");
 }
 
 /******************************************************************************/
