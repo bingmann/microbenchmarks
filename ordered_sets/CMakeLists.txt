@@ -6,7 +6,7 @@
 # All rights reserved. Published under the MIT License in the LICENSE file.
 ################################################################################
 
-add_executable(mbm_trees mbm_trees.cpp)
-target_link_libraries(mbm_trees ${MBM_LINK_LIBRARIES})
+add_executable(mbm_ordered_sets mbm_ordered_sets.cpp)
+target_link_libraries(mbm_ordered_sets ${MBM_LINK_LIBRARIES})
 
 ################################################################################

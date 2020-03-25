@@ -77,6 +77,15 @@ endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
+### use Boost ###
+
+find_package(Boost 1.42.0 COMPONENTS container)
+
+if(${Boost_FOUND})
+  include_directories(${Boost_INCLUDE_DIRS})
+  set(MBM_LINK_LIBRARIES ${Boost_LIBRARIES} ${MBM_LINK_LIBRARIES})
+endif()
+
 ### use TLX ###
 
 add_subdirectory(extlib/tlx)
@@ -86,7 +95,7 @@ set(MBM_LINK_LIBRARIES tlx ${MBM_LINK_LIBRARIES})
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-add_subdirectory(ordered_trees)
+add_subdirectory(ordered_sets)
 add_subdirectory(sort)
 
 add_executable(results_to_tsv results_to_tsv.cpp)

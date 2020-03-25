@@ -1,7 +1,7 @@
 /*******************************************************************************
- * mbm_trees.cpp
+ * mbm_ordered_sets.cpp
  *
- * Microbenchmark insertion, find, and delete in ordered trees
+ * Microbenchmark insertion, find, and delete in ordered sets and maps.
  *
  * Copyright (C) 2020 Timo Bingmann <tb@panthema.net>
  *
@@ -19,10 +19,12 @@
 #include <set>
 #include <tlx/container/btree_multiset.hpp>
 #include <tlx/container/splay_tree.hpp>
+#include <boost/container/flat_set.hpp>
 #include <unordered_set>
 
 #include <map>
 #include <tlx/container/btree_multimap.hpp>
+#include <boost/container/flat_map.hpp>
 #include <unordered_map>
 
 /******************************************************************************/
@@ -52,9 +54,9 @@ struct btree_traits_speed : tlx::btree_default_traits<size_t, size_t> {
 
 /******************************************************************************/
 
-class TreeBenchmark {
+class Benchmark {
 public:
-    TreeBenchmark(size_t size, const char* container)
+    Benchmark(size_t size, const char* container)
         : size_(size), container_(container) {
     }
 
@@ -63,7 +65,7 @@ public:
 
     virtual const char* name() const = 0;
 
-    friend std::ostream& operator<<(std::ostream& os, const TreeBenchmark& b) {
+    friend std::ostream& operator<<(std::ostream& os, const Benchmark& b) {
         return os << "benchmark=" << b.name() << '\t'
                   << "container=" << b.container_ << '\t' << "size=" << b.size_
                   << '\t';
@@ -75,10 +77,10 @@ public:
 
 //! Test a generic set type with insertions
 template <typename SetType>
-class Test_Set_Insert : public TreeBenchmark {
+class Test_Set_Insert : public Benchmark {
 public:
     Test_Set_Insert(size_t size, const char* container)
-        : TreeBenchmark(size, container) {
+        : Benchmark(size, container) {
     }
 
     const char* name() const final {
@@ -98,10 +100,10 @@ public:
 
 //! Test a generic set type with insert, find and delete sequences
 template <typename SetType>
-class Test_Set_InsertFindDelete : public TreeBenchmark {
+class Test_Set_InsertFindDelete : public Benchmark {
 public:
     Test_Set_InsertFindDelete(size_t size, const char* container)
-        : TreeBenchmark(size, container) {
+        : Benchmark(size, container) {
     }
 
     const char* name() const final {
@@ -131,7 +133,7 @@ public:
 
 //! Test a generic set type with insert, find and delete sequences
 template <typename SetType>
-class Test_Set_Find : public TreeBenchmark {
+class Test_Set_Find : public Benchmark {
 public:
     SetType set;
 
@@ -140,7 +142,7 @@ public:
     }
 
     Test_Set_Find(size_t size, const char* container)
-        : TreeBenchmark(size, container) {
+        : Benchmark(size, container) {
         std::default_random_engine rng(seed);
         for (size_t i = 0; i < size_; i++)
             set.insert(rng());
@@ -185,10 +187,10 @@ struct TestFactory_Set {
 
 //! Test a generic map type with insertions
 template <typename MapType>
-class Test_Map_Insert : public TreeBenchmark {
+class Test_Map_Insert : public Benchmark {
 public:
     Test_Map_Insert(size_t size, const char* container)
-        : TreeBenchmark(size, container) {
+        : Benchmark(size, container) {
     }
 
     const char* name() const final {
@@ -210,10 +212,10 @@ public:
 
 //! Test a generic map type with insert, find and delete sequences
 template <typename MapType>
-class Test_Map_InsertFindDelete : public TreeBenchmark {
+class Test_Map_InsertFindDelete : public Benchmark {
 public:
     Test_Map_InsertFindDelete(size_t size, const char* container)
-        : TreeBenchmark(size, container) {
+        : Benchmark(size, container) {
     }
 
     const char* name() const final {
@@ -245,7 +247,7 @@ public:
 
 //! Test a generic map type with insert, find and delete sequences
 template <typename MapType>
-class Test_Map_Find : public TreeBenchmark {
+class Test_Map_Find : public Benchmark {
 public:
     MapType map;
 
@@ -254,7 +256,7 @@ public:
     }
 
     Test_Map_Find(size_t size, const char* container)
-        : TreeBenchmark(size, container) {
+        : Benchmark(size, container) {
         std::default_random_engine rng(seed);
         for (size_t i = 0; i < size_; i++) {
             size_t r = rng();
@@ -325,11 +327,11 @@ void TestFactory_Set<TestClass>::call_testrunner(size_t size) {
     testrunner_loop<UnorderedSet>(size, "std::unordered_multiset");
     testrunner_loop<SplaySet>(size, "tlx::splay_multiset");
 
-    testrunner_loop<BtreeSet<4>>(size, "tlx::btree_multiset<4>");
-    testrunner_loop<BtreeSet<8>>(size, "tlx::btree_multiset<8>");
-    testrunner_loop<BtreeSet<16>>(size, "tlx::btree_multiset<16>");
-    testrunner_loop<BtreeSet<32>>(size, "tlx::btree_multiset<32>");
-    testrunner_loop<BtreeSet<64>>(size, "tlx::btree_multiset<64>");
+    testrunner_loop<BtreeSet<4>>(size, "tlx::btree_multiset<004>");
+    testrunner_loop<BtreeSet<8>>(size, "tlx::btree_multiset<008>");
+    testrunner_loop<BtreeSet<16>>(size, "tlx::btree_multiset<016>");
+    testrunner_loop<BtreeSet<32>>(size, "tlx::btree_multiset<032>");
+    testrunner_loop<BtreeSet<64>>(size, "tlx::btree_multiset<064>");
     testrunner_loop<BtreeSet<128>>(size, "tlx::btree_multiset<128>");
     testrunner_loop<BtreeSet<256>>(size, "tlx::btree_multiset<256>");
 }
@@ -340,11 +342,11 @@ void TestFactory_Map<TestClass>::call_testrunner(size_t size) {
     testrunner_loop<StdMap>(size, "std::multimap");
     testrunner_loop<UnorderedMap>(size, "std::unordered_multimap");
 
-    testrunner_loop<BtreeMap<4>>(size, "tlx::btree_multimap<4>");
-    testrunner_loop<BtreeMap<8>>(size, "tlx::btree_multimap<8>");
-    testrunner_loop<BtreeMap<16>>(size, "tlx::btree_multimap<16>");
-    testrunner_loop<BtreeMap<32>>(size, "tlx::btree_multimap<32>");
-    testrunner_loop<BtreeMap<64>>(size, "tlx::btree_multimap<64>");
+    testrunner_loop<BtreeMap<4>>(size, "tlx::btree_multimap<004>");
+    testrunner_loop<BtreeMap<8>>(size, "tlx::btree_multimap<008>");
+    testrunner_loop<BtreeMap<16>>(size, "tlx::btree_multimap<016>");
+    testrunner_loop<BtreeMap<32>>(size, "tlx::btree_multimap<032>");
+    testrunner_loop<BtreeMap<64>>(size, "tlx::btree_multimap<064>");
     testrunner_loop<BtreeMap<128>>(size, "tlx::btree_multimap<128>");
     testrunner_loop<BtreeMap<256>>(size, "tlx::btree_multimap<256>");
 }
