@@ -547,7 +547,7 @@ void PerfMeasurement::close_fd(int& fd) const {
 class Microbenchmark : public PerfMeasurement {
 public:
     template <typename Benchmark>
-    void run_check(Benchmark&& benchmark) {
+    void run(Benchmark&& benchmark) {
 
         double ts1 = tlx::timestamp();
         PerfMeasurement::start();
@@ -557,13 +557,74 @@ public:
         PerfMeasurement::stop();
         double ts2 = tlx::timestamp();
 
-        time_ += (ts2 - ts1);
+        time_ = ts2 - ts1;
+    }
 
+    template <typename Benchmark>
+    void run_print(Benchmark&& benchmark) {
+        run(benchmark);
+        print(std::forward<Benchmark>(benchmark));
+    }
+
+    template <typename Benchmark>
+    void run_check_print(Benchmark&& benchmark) {
+        run(benchmark);
         benchmark.check();
+        print(std::forward<Benchmark>(benchmark));
+    }
 
-        std::ostream& os = std::cout;
+    //! run repeated experiment at least this time
+    double repeated_min_time_ = 1.0;
+    //! shorted repeated experiment if over this time
+    double repeated_max_time_ = 2.0;
 
-        os << "RESULT\t" << benchmark << "time=" << time() << '\t';
+    template <typename Benchmark, typename... Args>
+    void run_auto_repeat(size_t* repetitions, Args&&... args) {
+        repetitions_ = *repetitions;
+        if (repetitions_ == 0)
+            repetitions_ = 1;
+
+        double ts1, ts2;
+
+        while (true) {
+            // initialize test structures
+            Benchmark benchmark(std::forward<Args>(args)...);
+
+            ts1 = tlx::timestamp();
+            PerfMeasurement::start();
+
+            for (size_t r = 0; r < repetitions_; ++r)
+                benchmark.run();
+
+            PerfMeasurement::stop();
+            ts2 = tlx::timestamp();
+
+            time_ = ts2 - ts1;
+
+            std::cout << "Run with " << repetitions_ << " repetitions "
+                      << " in time " << time_ << "\n";
+
+            // discard and repeat if test took less than one second.
+            if (time_ < repeated_min_time_) {
+                repetitions_ *= 2;
+                continue;
+            }
+
+            print(benchmark);
+
+            // if too many repetition, divide by two
+            if (time_ > repeated_max_time_)
+                repetitions_ /= 2;
+
+            *repetitions = repetitions_;
+            break;
+        }
+    }
+
+    template <typename Benchmark>
+    void print(Benchmark&& benchmark, std::ostream& os = std::cout) {
+        os << "RESULT\t" << benchmark << "time=" << time() << '\t'
+           << "repetitions=" << repetitions_ << '\t';
 
         if (fd_hw_cpu_cycles_ >= 0)
             os << "cpu_cycles=" << hw_cpu_cycles() << '\t';
@@ -618,6 +679,8 @@ public:
     double time() const {
         return time_;
     }
+
+    size_t repetitions_ = 1;
 };
 
 #endif // !MICROBENCHMARKING_HEADER

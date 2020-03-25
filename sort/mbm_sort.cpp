@@ -144,7 +144,7 @@ void test_size(size_t size, size_t rep) {
     mbm.enable_hw_cache3(
         PerfCache::LL, PerfCacheOp::Read, PerfCacheOpResult::Miss);
 
-    mbm.run_check(Benchmark(size, rep));
+    mbm.run_check_print(Benchmark(size, rep));
 }
 
 int main() {
