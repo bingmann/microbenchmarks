@@ -89,4 +89,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 add_subdirectory(ordered_trees)
 add_subdirectory(sort)
 
+add_executable(results_to_tsv results_to_tsv.cpp)
+
 ################################################################################
