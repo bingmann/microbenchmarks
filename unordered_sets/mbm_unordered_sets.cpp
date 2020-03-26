@@ -11,6 +11,7 @@
 #include <microbenchmarking.hpp>
 
 #include <tlx/die.hpp>
+#include <tlx/unused.hpp>
 
 #include <algorithm>
 #include <iostream>
@@ -415,6 +416,7 @@ void testrunner_loop(size_t size, const char* container_name) {
 
 template <template <typename Type> class TestClass>
 void TestFactory_Set<TestClass>::call_testrunner(size_t size) {
+    tlx::unused(size);
 
 #if MBM_SET_ALGORITHM == 1
     testrunner_loop<UnorderedSet>(size, "std::unordered_multiset");
@@ -439,26 +441,27 @@ void TestFactory_Set<TestClass>::call_testrunner(size_t size) {
 
 template <template <typename Type> class TestClass>
 void TestFactory_Map<TestClass>::call_testrunner(size_t size) {
+    tlx::unused(size);
 
-#if MBM_SET_ALGORITHM == 1
+#if MBM_MAP_ALGORITHM == 1
     testrunner_loop<UnorderedMap>(size, "std::unordered_multimap");
-#elif MBM_SET_ALGORITHM == 2
+#elif MBM_MAP_ALGORITHM == 2
     testrunner_loop<GoogleSparseHashMap>(size, "google::sparse_hash_map");
-#elif MBM_SET_ALGORITHM == 3
+#elif MBM_MAP_ALGORITHM == 3
     testrunner_loop<GoogleDenseHashMap>(size, "google::dense_hash_map");
-#elif MBM_SET_ALGORITHM == 4
+#elif MBM_MAP_ALGORITHM == 4
     testrunner_loop<SppSparseHashMap>(size, "spp::sparse_hash_map");
-#elif MBM_SET_ALGORITHM == 5
+#elif MBM_MAP_ALGORITHM == 5
     testrunner_loop<TslHopscotchMap>(size, "tsl::hopscotch_map");
-#elif MBM_SET_ALGORITHM == 6
+#elif MBM_MAP_ALGORITHM == 6
     testrunner_loop<TslRobinMap>(size, "tsl::robin_map");
-#elif MBM_SET_ALGORITHM == 7
+#elif MBM_MAP_ALGORITHM == 7
     testrunner_loop<RobinHoodMap>(size, "robin_hood::unordered_map");
-#elif MBM_SET_ALGORITHM == 8
+#elif MBM_MAP_ALGORITHM == 8
     testrunner_loop<CuckooHashMap>(size, "libcuckoo::cuckoohash_map");
-#elif MBM_SET_ALGORITHM == 10
+#elif MBM_MAP_ALGORITHM == 10
     testrunner_loop<AbslFlatHashMap>(size, "absl::flat_hash_map");
-#elif MBM_SET_ALGORITHM == 11
+#elif MBM_MAP_ALGORITHM == 11
     testrunner_loop<AbslNodeHashMap>(size, "absl::node_hash_map");
 #endif
 }
