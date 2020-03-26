@@ -151,12 +151,15 @@ int main() {
     for (size_t size = 1024; size < 32 * 1024 * 1024; size = 2 * size) {
         size_t f = (8 * 1024 * 1024) / size;
         for (size_t rep = 0; rep < std::min<size_t>(1000, 100 * f); ++rep) {
-            test_size<StdSort>(size, rep);
-            test_size<StdStableSort>(size, rep);
-            test_size<IPS4oSort>(size, rep);
+            // MBM_ALGORITHM is defined from cmake to select algorithm
+            test_size<MBM_ALGORITHM>(size, rep);
 
-            test_size<IPS4oParallelSort>(size, rep);
-            test_size<MCSTLParallelMergesort>(size, rep);
+            // test_size<StdSort>(size, rep);
+            // test_size<StdStableSort>(size, rep);
+            // test_size<IPS4oSort>(size, rep);
+
+            // test_size<IPS4oParallelSort>(size, rep);
+            // test_size<MCSTLParallelMergesort>(size, rep);
         }
     }
 

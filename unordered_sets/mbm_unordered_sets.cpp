@@ -394,6 +394,8 @@ size_t s_repetitions = 0;
 //! Repeat (short) tests until enough time elapsed and divide by the repeat.
 template <typename TestClass>
 void testrunner_loop(size_t size, const char* container_name) {
+    std::cerr << "Run benchmark on " << container_name << " size " << size
+              << std::endl;
 
     Microbenchmark mbm;
     mbm.enable_hw_cpu_cycles();
@@ -414,30 +416,51 @@ void testrunner_loop(size_t size, const char* container_name) {
 template <template <typename Type> class TestClass>
 void TestFactory_Set<TestClass>::call_testrunner(size_t size) {
 
+#if MBM_SET_ALGORITHM == 1
     testrunner_loop<UnorderedSet>(size, "std::unordered_multiset");
+#elif MBM_SET_ALGORITHM == 2
     testrunner_loop<GoogleSparseHashSet>(size, "google::sparse_hash_set");
+#elif MBM_SET_ALGORITHM == 3
     testrunner_loop<GoogleDenseHashSet>(size, "google::dense_hash_set");
+#elif MBM_SET_ALGORITHM == 4
     testrunner_loop<SppSparseHashSet>(size, "spp::sparse_hash_set");
+#elif MBM_SET_ALGORITHM == 5
     testrunner_loop<TslHopscotchSet>(size, "tsl::hopscotch_set");
+#elif MBM_SET_ALGORITHM == 6
     testrunner_loop<TslRobinSet>(size, "tsl::robin_set");
+#elif MBM_SET_ALGORITHM == 7
     testrunner_loop<RobinHoodSet>(size, "robin_hood::unordered_set");
+#elif MBM_SET_ALGORITHM == 10
     testrunner_loop<AbslFlatHashSet>(size, "absl::flat_hash_set");
+#elif MBM_SET_ALGORITHM == 11
     testrunner_loop<AbslNodeHashSet>(size, "absl::node_hash_set");
+#endif
 }
 
 template <template <typename Type> class TestClass>
 void TestFactory_Map<TestClass>::call_testrunner(size_t size) {
 
+#if MBM_SET_ALGORITHM == 1
     testrunner_loop<UnorderedMap>(size, "std::unordered_multimap");
+#elif MBM_SET_ALGORITHM == 2
     testrunner_loop<GoogleSparseHashMap>(size, "google::sparse_hash_map");
+#elif MBM_SET_ALGORITHM == 3
     testrunner_loop<GoogleDenseHashMap>(size, "google::dense_hash_map");
+#elif MBM_SET_ALGORITHM == 4
     testrunner_loop<SppSparseHashMap>(size, "spp::sparse_hash_map");
+#elif MBM_SET_ALGORITHM == 5
     testrunner_loop<TslHopscotchMap>(size, "tsl::hopscotch_map");
+#elif MBM_SET_ALGORITHM == 6
     testrunner_loop<TslRobinMap>(size, "tsl::robin_map");
+#elif MBM_SET_ALGORITHM == 7
     testrunner_loop<RobinHoodMap>(size, "robin_hood::unordered_map");
+#elif MBM_SET_ALGORITHM == 8
     testrunner_loop<CuckooHashMap>(size, "libcuckoo::cuckoohash_map");
+#elif MBM_SET_ALGORITHM == 10
     testrunner_loop<AbslFlatHashMap>(size, "absl::flat_hash_map");
+#elif MBM_SET_ALGORITHM == 11
     testrunner_loop<AbslNodeHashMap>(size, "absl::node_hash_map");
+#endif
 }
 
 /******************************************************************************/

@@ -96,6 +96,26 @@ set(MBM_LINK_LIBRARIES tlx ${MBM_LINK_LIBRARIES})
 add_subdirectory(extlib/abseil-cpp)
 
 ################################################################################
+### Macros
+
+macro(WriteRunAllBatch FILE PROGRAM_LIST)
+  file(WRITE ${FILE}
+    "#!/bin/sh\n" "for f in"
+    )
+
+  foreach(F ${PROGRAM_LIST})
+    file(APPEND ${FILE} " ${F}")
+  endforeach()
+
+  file(APPEND ${FILE}
+    "; do\n"
+    "  if [ ! -e $f-results.txt ]; then\n"
+    "    ./$f > $f-results.txt.tmp && mv $f-results.txt.tmp $f-results.txt\n"
+    "  fi\n"
+    "done\n")
+endmacro()
+
+################################################################################
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 

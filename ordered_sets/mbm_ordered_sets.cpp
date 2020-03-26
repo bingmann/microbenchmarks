@@ -328,6 +328,8 @@ size_t s_repetitions = 0;
 //! Repeat (short) tests until enough time elapsed and divide by the repeat.
 template <typename TestClass>
 void testrunner_loop(size_t size, const char* container_name) {
+    std::cerr << "Run benchmark on " << container_name << " size " << size
+              << std::endl;
 
     Microbenchmark mbm;
     mbm.enable_hw_cpu_cycles();
@@ -348,44 +350,63 @@ void testrunner_loop(size_t size, const char* container_name) {
 template <template <typename Type> class TestClass>
 void TestFactory_Set<TestClass>::call_testrunner(size_t size) {
 
+#if MBM_SET_ALGORITHM == 1
     testrunner_loop<StdSet>(size, "std::multiset");
+#elif MBM_SET_ALGORITHM == 2
     testrunner_loop<UnorderedSet>(size, "std::unordered_multiset");
+#elif MBM_SET_ALGORITHM == 3
     testrunner_loop<SplaySet>(size, "tlx::splay_multiset");
-
+#elif MBM_SET_ALGORITHM == 10
     testrunner_loop<BtreeSet<4>>(size, "tlx::btree_multiset<004>");
+#elif MBM_SET_ALGORITHM == 11
     testrunner_loop<BtreeSet<8>>(size, "tlx::btree_multiset<008>");
+#elif MBM_SET_ALGORITHM == 12
     testrunner_loop<BtreeSet<16>>(size, "tlx::btree_multiset<016>");
+#elif MBM_SET_ALGORITHM == 13
     testrunner_loop<BtreeSet<32>>(size, "tlx::btree_multiset<032>");
+#elif MBM_SET_ALGORITHM == 14
     testrunner_loop<BtreeSet<64>>(size, "tlx::btree_multiset<064>");
+#elif MBM_SET_ALGORITHM == 15
     testrunner_loop<BtreeSet<128>>(size, "tlx::btree_multiset<128>");
+#elif MBM_SET_ALGORITHM == 16
     testrunner_loop<BtreeSet<256>>(size, "tlx::btree_multiset<256>");
-
+#elif MBM_SET_ALGORITHM == 20
     testrunner_loop<BoostFlatSet>(size, "boost::flat_multiset");
-
+#elif MBM_SET_ALGORITHM == 21
     testrunner_loop<GoogleBTreeSet>(size, "google btree_set");
-
+#elif MBM_SET_ALGORITHM == 22
     testrunner_loop<AbslBTreeSet>(size, "absl::btree_set");
+#endif
 }
 
 template <template <typename Type> class TestClass>
 void TestFactory_Map<TestClass>::call_testrunner(size_t size) {
 
+#if MBM_SET_ALGORITHM == 1
     testrunner_loop<StdMap>(size, "std::multimap");
+#elif MBM_SET_ALGORITHM == 2
     testrunner_loop<UnorderedMap>(size, "std::unordered_multimap");
-
+#elif MBM_SET_ALGORITHM == 10
     testrunner_loop<BtreeMap<4>>(size, "tlx::btree_multimap<004>");
+#elif MBM_SET_ALGORITHM == 11
     testrunner_loop<BtreeMap<8>>(size, "tlx::btree_multimap<008>");
+#elif MBM_SET_ALGORITHM == 12
     testrunner_loop<BtreeMap<16>>(size, "tlx::btree_multimap<016>");
+#elif MBM_SET_ALGORITHM == 13
     testrunner_loop<BtreeMap<32>>(size, "tlx::btree_multimap<032>");
+#elif MBM_SET_ALGORITHM == 14
     testrunner_loop<BtreeMap<64>>(size, "tlx::btree_multimap<064>");
+#elif MBM_SET_ALGORITHM == 15
     testrunner_loop<BtreeMap<128>>(size, "tlx::btree_multimap<128>");
+#elif MBM_SET_ALGORITHM == 16
     testrunner_loop<BtreeMap<256>>(size, "tlx::btree_multimap<256>");
-
+#elif MBM_SET_ALGORITHM == 20
     testrunner_loop<BoostFlatMap>(size, "boost::flat_multimap");
-
+#elif MBM_SET_ALGORITHM == 21
     testrunner_loop<GoogleBTreeMap>(size, "google btree_map");
-
+#elif MBM_SET_ALGORITHM == 22
     testrunner_loop<AbslBTreeMap>(size, "absl::btree_map");
+#endif
 }
 
 /******************************************************************************/
