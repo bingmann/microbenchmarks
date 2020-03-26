@@ -6,7 +6,7 @@
 # All rights reserved. Published under the MIT License in the LICENSE file.
 ################################################################################
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../extlib/abseil-cpp)
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/../extlib/abseil-cpp)
 
 set(PROGRAM_LIST
   std_multiset std_unordered_multiset2 tlx_splay_multiset

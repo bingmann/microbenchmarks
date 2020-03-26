@@ -6,13 +6,14 @@
 # All rights reserved. Published under the MIT License in the LICENSE file.
 ################################################################################
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/sparsehash/src)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/sparsepp)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/hopscotch-map/include)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/robin-map/include)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/robin-hood-hashing/src/include)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libcuckoo/libcuckoo)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../extlib/abseil-cpp)
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/sparsehash/src)
+include_directories(SYSTEM ${CMAKE_CURRENT_BINARY_DIR})
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/sparsepp)
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/hopscotch-map/include)
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/robin-map/include)
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/robin-hood-hashing/src/include)
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/libcuckoo/libcuckoo)
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/../extlib/abseil-cpp)
 
 set(PROGRAM_LIST
   std_unordered_multiset
@@ -75,5 +76,9 @@ target_link_libraries(absl_node_hash_map2 absl::node_hash_map)
 
 # write batch file
 WriteRunAllBatch("${CMAKE_CURRENT_BINARY_DIR}/run_all.sh" "${PROGRAM_LIST}")
+
+# fix google sparsehash
+file(COPY sparseconfig.h
+  DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/sparsehash/internal/)
 
 ################################################################################
