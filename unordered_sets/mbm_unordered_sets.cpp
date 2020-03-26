@@ -1,7 +1,7 @@
 /*******************************************************************************
- * mbm_ordered_sets.cpp
+ * mbm_unordered_sets.cpp
  *
- * Microbenchmark insertion, find, and delete in ordered sets and maps.
+ * Microbenchmark insertion, find, and delete in unordered sets and maps.
  *
  * Copyright (C) 2020 Timo Bingmann <tb@panthema.net>
  *
@@ -16,22 +16,30 @@
 #include <iostream>
 #include <random>
 
-#include <boost/container/flat_set.hpp>
-#include <set>
-#include <tlx/container/btree_multiset.hpp>
-#include <tlx/container/splay_tree.hpp>
+#include <unordered_map>
 #include <unordered_set>
 
-#include <boost/container/flat_map.hpp>
-#include <map>
-#include <tlx/container/btree_multimap.hpp>
-#include <unordered_map>
+#include <sparsehash/dense_hash_map>
+#include <sparsehash/dense_hash_set>
+#include <sparsehash/sparse_hash_map>
+#include <sparsehash/sparse_hash_set>
 
-#include "cpp-btree-1.0.1/btree_map.h"
-#include "cpp-btree-1.0.1/btree_set.h"
+#include <sparsepp/spp.h>
 
-#include <absl/container/btree_map.h>
-#include <absl/container/btree_set.h>
+#include <tsl/hopscotch_map.h>
+#include <tsl/hopscotch_set.h>
+
+#include <tsl/robin_map.h>
+#include <tsl/robin_set.h>
+
+#include <robin_hood.h>
+
+#include <cuckoohash_map.hh>
+
+#include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
+#include <absl/container/node_hash_map.h>
+#include <absl/container/node_hash_set.h>
 
 /******************************************************************************/
 // Settings
@@ -40,23 +48,13 @@
 const size_t min_items = 125;
 
 //! maximum number of items to insert
-const size_t max_items = 1024000 * 64;
+const size_t max_items = 1024000 * 16;
 
 //! maximum number of items to insert
 const size_t target_items = 1024000 * 16;
 
 //! random seed
 const int seed = 34234235;
-
-//! Traits used for the speed tests, BTREE_DEBUG is not defined.
-template <int InnerSlots, int LeafSlots>
-struct btree_traits_speed : tlx::btree_default_traits<size_t, size_t> {
-    static const bool self_verify = false;
-    static const bool debug = false;
-
-    static const int leaf_slots = InnerSlots;
-    static const int inner_slots = LeafSlots;
-};
 
 /******************************************************************************/
 
@@ -78,6 +76,11 @@ public:
     }
 };
 
+//! adjust sentinel values
+size_t adjust(size_t x) {
+    return x < 2 ? 2 : x;
+}
+
 /******************************************************************************/
 // Set Benchmarks
 
@@ -98,7 +101,7 @@ public:
 
         std::default_random_engine rng(seed);
         for (size_t i = 0; i < size_; i++)
-            set.insert(rng());
+            set.insert(adjust(rng()));
 
         die_unless(static_cast<size_t>(set.size()) == size_);
     }
@@ -121,17 +124,17 @@ public:
 
         std::default_random_engine rng(seed);
         for (size_t i = 0; i < size_; i++)
-            set.insert(rng());
+            set.insert(adjust(rng()));
 
-        die_unless(static_cast<size_t>(set.size()) == size_);
-
-        rng.seed(seed);
-        for (size_t i = 0; i < size_; i++)
-            set.find(rng());
+        die_unequal(static_cast<size_t>(set.size()), size_);
 
         rng.seed(seed);
         for (size_t i = 0; i < size_; i++)
-            set.erase(set.find(rng()));
+            set.find(adjust(rng()));
+
+        rng.seed(seed);
+        for (size_t i = 0; i < size_; i++)
+            set.erase(set.find(adjust(rng())));
 
         die_unless(set.empty());
     }
@@ -151,7 +154,7 @@ public:
         : Benchmark(size, container) {
         std::default_random_engine rng(seed);
         for (size_t i = 0; i < size_; i++)
-            set.insert(rng());
+            set.insert(adjust(rng()));
 
         die_unless(static_cast<size_t>(set.size()) == size_);
     }
@@ -159,39 +162,59 @@ public:
     void run() {
         std::default_random_engine rng(seed);
         for (size_t i = 0; i < size_; i++)
-            set.find(rng());
+            set.find(adjust(rng()));
     }
 };
+
+/*----------------------------------------------------------------------------*/
+// Set Adapters
+
+class MyGoogleSparseHashSet : public google::sparse_hash_set<size_t> {
+public:
+    MyGoogleSparseHashSet() : google::sparse_hash_set<size_t>() {
+        set_deleted_key(1);
+    }
+};
+
+class MyGoogleDenseHashSet : public google::dense_hash_set<size_t> {
+public:
+    MyGoogleDenseHashSet() : google::dense_hash_set<size_t>() {
+        set_empty_key(0);
+        set_deleted_key(1);
+    }
+};
+
+/*----------------------------------------------------------------------------*/
 
 //! Construct different set types for a generic test class
 template <template <typename SetType> class TestClass>
 struct TestFactory_Set {
-    //! Test the multiset red-black tree from STL
-    using StdSet = TestClass<std::multiset<size_t>>;
-
-    //! Test the multiset red-black tree from STL
-    using SplaySet = TestClass<tlx::splay_multiset<size_t>>;
-
     //! Test the unordered_set from STL TR1
     using UnorderedSet = TestClass<std::unordered_multiset<size_t>>;
 
-    //! Test the B+ tree with a specific leaf/inner slots
-    template <int Slots>
-    struct BtreeSet : TestClass<tlx::btree_multiset<size_t, std::less<size_t>,
-                          struct btree_traits_speed<Slots, Slots>>> {
-        BtreeSet(size_t n, const char* cn)
-            : TestClass<tlx::btree_multiset<size_t, std::less<size_t>,
-                  struct btree_traits_speed<Slots, Slots>>>(n, cn) {}
-    };
+    //! Test Google's sparse_hash_set
+    using GoogleSparseHashSet = TestClass<MyGoogleSparseHashSet>;
 
-    //! Test boost::flat_set
-    using BoostFlatSet = TestClass<boost::container::flat_multiset<size_t>>;
+    //! Test Google's dense_hash_set
+    using GoogleDenseHashSet = TestClass<MyGoogleDenseHashSet>;
 
-    //! Test Google's btree_set
-    using GoogleBTreeSet = TestClass<btree::btree_set<size_t>>;
+    //! Test spp::sparse_hash_set
+    using SppSparseHashSet = TestClass<spp::sparse_hash_set<size_t>>;
 
-    //! Test absl::btree_set
-    using AbslBTreeSet = TestClass<absl::btree_set<size_t>>;
+    //! Test tsl::hopscotch_set
+    using TslHopscotchSet = TestClass<tsl::hopscotch_set<size_t>>;
+
+    //! Test tsl::robin_set
+    using TslRobinSet = TestClass<tsl::robin_set<size_t>>;
+
+    //! Test robin_hood::unordered_set
+    using RobinHoodSet = TestClass<robin_hood::unordered_set<size_t>>;
+
+    //! Test absl::flat_hash_set
+    using AbslFlatHashSet = TestClass<absl::flat_hash_set<size_t>>;
+
+    //! Test absl::node_hash_set
+    using AbslNodeHashSet = TestClass<absl::node_hash_set<size_t>>;
 
     //! Run tests on all set types
     void call_testrunner(size_t size);
@@ -217,7 +240,7 @@ public:
 
         std::default_random_engine rng(seed);
         for (size_t i = 0; i < size_; i++) {
-            size_t r = rng();
+            size_t r = adjust(rng());
             map.insert(std::make_pair(r, r));
         }
 
@@ -242,7 +265,7 @@ public:
 
         std::default_random_engine rng(seed);
         for (size_t i = 0; i < size_; i++) {
-            size_t r = rng();
+            size_t r = adjust(rng());
             map.insert(std::make_pair(r, r));
         }
 
@@ -250,11 +273,13 @@ public:
 
         rng.seed(seed);
         for (size_t i = 0; i < size_; i++)
-            map.find(rng());
+            map.find(adjust(rng()));
 
         rng.seed(seed);
-        for (size_t i = 0; i < size_; i++)
-            map.erase(map.find(rng()));
+        for (size_t i = 0; i < size_; i++) {
+            size_t r = adjust(rng());
+            map.erase(map.find(r));
+        }
 
         die_unless(map.empty());
     }
@@ -274,7 +299,7 @@ public:
         : Benchmark(size, container) {
         std::default_random_engine rng(seed);
         for (size_t i = 0; i < size_; i++) {
-            size_t r = rng();
+            size_t r = adjust(rng());
             map.insert(std::make_pair(r, r));
         }
 
@@ -284,38 +309,79 @@ public:
     void run() {
         std::default_random_engine rng(seed);
         for (size_t i = 0; i < size_; i++)
-            map.find(rng());
+            map.find(adjust(rng()));
     }
 };
+
+/*----------------------------------------------------------------------------*/
+// Map Adapters
+
+class MyGoogleSparseHashMap : public google::sparse_hash_map<size_t, size_t> {
+public:
+    MyGoogleSparseHashMap() : google::sparse_hash_map<size_t, size_t>() {
+        set_deleted_key(1);
+    }
+};
+
+class MyGoogleDenseHashMap : public google::dense_hash_map<size_t, size_t> {
+public:
+    MyGoogleDenseHashMap() : google::dense_hash_map<size_t, size_t>() {
+        set_empty_key(0);
+        set_deleted_key(1);
+    }
+};
+
+class MyRobinHoodMap : public robin_hood::unordered_map<size_t, size_t> {
+public:
+    using Super = robin_hood::unordered_map<size_t, size_t>;
+    auto insert(const std::pair<size_t, size_t>& p) {
+        return Super::insert(
+            robin_hood::pair<size_t, size_t>(p.first, p.second));
+    }
+};
+
+class MyCuckooHashMap : public libcuckoo::cuckoohash_map<size_t, size_t> {
+public:
+    using Super = libcuckoo::cuckoohash_map<size_t, size_t>;
+    auto insert(const std::pair<size_t, size_t>& p) {
+        return Super::insert(p.first, p.second);
+    }
+};
+
+/*----------------------------------------------------------------------------*/
 
 //! Construct different map types for a generic test class
 template <template <typename MapType> class TestClass>
 struct TestFactory_Map {
-    //! Test the multimap red-black tree from STL
-    using StdMap = TestClass<std::multimap<size_t, size_t>>;
-
     //! Test the unordered_map from STL
     using UnorderedMap = TestClass<std::unordered_multimap<size_t, size_t>>;
 
-    //! Test the B+ tree with a specific leaf/inner slots
-    template <int Slots>
-    struct BtreeMap
-        : TestClass<tlx::btree_multimap<size_t, size_t, std::less<size_t>,
-              struct btree_traits_speed<Slots, Slots>>> {
-        BtreeMap(size_t n, const char* cn)
-            : TestClass<tlx::btree_multimap<size_t, size_t, std::less<size_t>,
-                  struct btree_traits_speed<Slots, Slots>>>(n, cn) {}
-    };
+    //! Test Google's sparse_hash_map
+    using GoogleSparseHashMap = TestClass<MyGoogleSparseHashMap>;
 
-    //! Test boost::flat_map
-    using BoostFlatMap =
-        TestClass<boost::container::flat_multimap<size_t, size_t>>;
+    //! Test Google's dense_hash_map
+    using GoogleDenseHashMap = TestClass<MyGoogleDenseHashMap>;
 
-    //! Test Google's btree_set
-    using GoogleBTreeMap = TestClass<btree::btree_map<size_t, size_t>>;
+    //! Test spp::sparse_hash_map
+    using SppSparseHashMap = TestClass<spp::sparse_hash_map<size_t, size_t>>;
 
-    //! Test absl::btree_map
-    using AbslBTreeMap = TestClass<absl::btree_map<size_t, size_t>>;
+    //! Test tsl::robin_map
+    using TslRobinMap = TestClass<tsl::robin_map<size_t, size_t>>;
+
+    //! Test tsl::hopscotch_map
+    using TslHopscotchMap = TestClass<tsl::hopscotch_map<size_t, size_t>>;
+
+    //! Test robin_hood::unordered_map
+    using RobinHoodMap = TestClass<MyRobinHoodMap>;
+
+    //! Test libcuckoo::cuckoohash_map
+    using CuckooHashMap = TestClass<MyCuckooHashMap>;
+
+    //! Test absl::flat_hash_map
+    using AbslFlatHashMap = TestClass<absl::flat_hash_map<size_t, size_t>>;
+
+    //! Test absl::node_hash_map
+    using AbslNodeHashMap = TestClass<absl::node_hash_map<size_t, size_t>>;
 
     //! Run tests on all map types
     void call_testrunner(size_t size);
@@ -341,51 +407,37 @@ void testrunner_loop(size_t size, const char* container_name) {
     mbm.enable_hw_cache3(
         PerfCache::LL, PerfCacheOp::Read, PerfCacheOpResult::Miss);
 
-    for (size_t r = 0; r < std::max<size_t>(4, target_items / size); ++r)
-        mbm.run_print(TestClass(size, container_name));
+    // for (size_t r = 0; r < std::max<size_t>(4, target_items / size); ++r)
+    mbm.run_print(TestClass(size, container_name));
 }
 
 template <template <typename Type> class TestClass>
 void TestFactory_Set<TestClass>::call_testrunner(size_t size) {
 
-    testrunner_loop<StdSet>(size, "std::multiset");
     testrunner_loop<UnorderedSet>(size, "std::unordered_multiset");
-    testrunner_loop<SplaySet>(size, "tlx::splay_multiset");
-
-    testrunner_loop<BtreeSet<4>>(size, "tlx::btree_multiset<004>");
-    testrunner_loop<BtreeSet<8>>(size, "tlx::btree_multiset<008>");
-    testrunner_loop<BtreeSet<16>>(size, "tlx::btree_multiset<016>");
-    testrunner_loop<BtreeSet<32>>(size, "tlx::btree_multiset<032>");
-    testrunner_loop<BtreeSet<64>>(size, "tlx::btree_multiset<064>");
-    testrunner_loop<BtreeSet<128>>(size, "tlx::btree_multiset<128>");
-    testrunner_loop<BtreeSet<256>>(size, "tlx::btree_multiset<256>");
-
-    testrunner_loop<BoostFlatSet>(size, "boost::flat_multiset");
-
-    testrunner_loop<GoogleBTreeSet>(size, "google btree_set");
-
-    testrunner_loop<AbslBTreeSet>(size, "absl::btree_set");
+    testrunner_loop<GoogleSparseHashSet>(size, "google::sparse_hash_set");
+    testrunner_loop<GoogleDenseHashSet>(size, "google::dense_hash_set");
+    testrunner_loop<SppSparseHashSet>(size, "spp::sparse_hash_set");
+    testrunner_loop<TslHopscotchSet>(size, "tsl::hopscotch_set");
+    testrunner_loop<TslRobinSet>(size, "tsl::robin_set");
+    testrunner_loop<RobinHoodSet>(size, "robin_hood::unordered_set");
+    testrunner_loop<AbslFlatHashSet>(size, "absl::flat_hash_set");
+    testrunner_loop<AbslNodeHashSet>(size, "absl::node_hash_set");
 }
 
 template <template <typename Type> class TestClass>
 void TestFactory_Map<TestClass>::call_testrunner(size_t size) {
 
-    testrunner_loop<StdMap>(size, "std::multimap");
     testrunner_loop<UnorderedMap>(size, "std::unordered_multimap");
-
-    testrunner_loop<BtreeMap<4>>(size, "tlx::btree_multimap<004>");
-    testrunner_loop<BtreeMap<8>>(size, "tlx::btree_multimap<008>");
-    testrunner_loop<BtreeMap<16>>(size, "tlx::btree_multimap<016>");
-    testrunner_loop<BtreeMap<32>>(size, "tlx::btree_multimap<032>");
-    testrunner_loop<BtreeMap<64>>(size, "tlx::btree_multimap<064>");
-    testrunner_loop<BtreeMap<128>>(size, "tlx::btree_multimap<128>");
-    testrunner_loop<BtreeMap<256>>(size, "tlx::btree_multimap<256>");
-
-    testrunner_loop<BoostFlatMap>(size, "boost::flat_multimap");
-
-    testrunner_loop<GoogleBTreeMap>(size, "google btree_map");
-
-    testrunner_loop<AbslBTreeMap>(size, "absl::btree_map");
+    testrunner_loop<GoogleSparseHashMap>(size, "google::sparse_hash_map");
+    testrunner_loop<GoogleDenseHashMap>(size, "google::dense_hash_map");
+    testrunner_loop<SppSparseHashMap>(size, "spp::sparse_hash_map");
+    testrunner_loop<TslHopscotchMap>(size, "tsl::hopscotch_map");
+    testrunner_loop<TslRobinMap>(size, "tsl::robin_map");
+    testrunner_loop<RobinHoodMap>(size, "robin_hood::unordered_map");
+    testrunner_loop<CuckooHashMap>(size, "libcuckoo::cuckoohash_map");
+    testrunner_loop<AbslFlatHashMap>(size, "absl::flat_hash_map");
+    testrunner_loop<AbslNodeHashMap>(size, "absl::node_hash_map");
 }
 
 /******************************************************************************/

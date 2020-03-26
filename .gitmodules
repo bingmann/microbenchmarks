@@ -4,3 +4,24 @@
 [submodule "sort/ips4o"]
 	path = sort/ips4o
 	url = https://github.com/SaschaWitt/ips4o.git
+[submodule "unordered_sets/sparsehash"]
+	path = unordered_sets/sparsehash
+	url = https://github.com/sparsehash/sparsehash.git
+[submodule "unordered_sets/sparsepp"]
+	path = unordered_sets/sparsepp
+	url = https://github.com/greg7mdp/sparsepp.git
+[submodule "unordered_sets/hopscotch-map"]
+	path = unordered_sets/hopscotch-map
+	url = https://github.com/Tessil/hopscotch-map.git
+[submodule "unordered_sets/robin-hood-hashing"]
+	path = unordered_sets/robin-hood-hashing
+	url = https://github.com/martinus/robin-hood-hashing.git
+[submodule "unordered_sets/robin-map"]
+	path = unordered_sets/robin-map
+	url = https://github.com/Tessil/robin-map.git
+[submodule "unordered_sets/libcuckoo"]
+	path = unordered_sets/libcuckoo
+	url = https://github.com/efficient/libcuckoo.git
+[submodule "extlib/abseil-cpp"]
+	path = extlib/abseil-cpp
+	url = https://github.com/abseil/abseil-cpp.git

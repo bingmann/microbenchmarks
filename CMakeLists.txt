@@ -91,12 +91,17 @@ endif()
 add_subdirectory(extlib/tlx)
 set(MBM_LINK_LIBRARIES tlx ${MBM_LINK_LIBRARIES})
 
+### use abseil ###
+
+add_subdirectory(extlib/abseil-cpp)
+
 ################################################################################
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(ordered_sets)
 add_subdirectory(sort)
+add_subdirectory(unordered_sets)
 
 add_executable(results_to_tsv results_to_tsv.cpp)
 
