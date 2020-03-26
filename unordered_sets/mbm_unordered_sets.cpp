@@ -409,8 +409,8 @@ void testrunner_loop(size_t size, const char* container_name) {
     mbm.enable_hw_cache3(
         PerfCache::LL, PerfCacheOp::Read, PerfCacheOpResult::Miss);
 
-    // for (size_t r = 0; r < std::max<size_t>(4, target_items / size); ++r)
-    mbm.run_print(TestClass(size, container_name));
+    for (size_t r = 0; r < std::max<size_t>(4, target_items / size); ++r)
+        mbm.run_print(TestClass(size, container_name));
 }
 
 template <template <typename Type> class TestClass>
