@@ -35,8 +35,6 @@
 
 #include <robin_hood.h>
 
-#include <cuckoohash_map.hh>
-
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
 #include <absl/container/node_hash_map.h>
@@ -341,14 +339,6 @@ public:
     }
 };
 
-class MyCuckooHashMap : public libcuckoo::cuckoohash_map<size_t, size_t> {
-public:
-    using Super = libcuckoo::cuckoohash_map<size_t, size_t>;
-    auto insert(const std::pair<size_t, size_t>& p) {
-        return Super::insert(p.first, p.second);
-    }
-};
-
 /*----------------------------------------------------------------------------*/
 
 //! Construct different map types for a generic test class
@@ -374,9 +364,6 @@ struct TestFactory_Map {
 
     //! Test robin_hood::unordered_map
     using RobinHoodMap = TestClass<MyRobinHoodMap>;
-
-    //! Test libcuckoo::cuckoohash_map
-    using CuckooHashMap = TestClass<MyCuckooHashMap>;
 
     //! Test absl::flat_hash_map
     using AbslFlatHashMap = TestClass<absl::flat_hash_map<size_t, size_t>>;
@@ -457,8 +444,6 @@ void TestFactory_Map<TestClass>::call_testrunner(size_t size) {
     testrunner_loop<TslRobinMap>(size, "tsl::robin_map");
 #elif MBM_MAP_ALGORITHM == 7
     testrunner_loop<RobinHoodMap>(size, "robin_hood::unordered_map");
-#elif MBM_MAP_ALGORITHM == 8
-    testrunner_loop<CuckooHashMap>(size, "libcuckoo::cuckoohash_map");
 #elif MBM_MAP_ALGORITHM == 10
     testrunner_loop<AbslFlatHashMap>(size, "absl::flat_hash_map");
 #elif MBM_MAP_ALGORITHM == 11

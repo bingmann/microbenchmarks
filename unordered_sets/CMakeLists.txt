@@ -12,7 +12,6 @@ include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/sparsepp)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/hopscotch-map/include)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/robin-map/include)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/robin-hood-hashing/src/include)
-include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/libcuckoo/libcuckoo)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/../extlib/abseil-cpp)
 
 set(PROGRAM_LIST
@@ -33,7 +32,6 @@ set(PROGRAM_LIST
   tsl_hopscotch_map
   tsl_robin_map
   robin_hood_unordered_map
-  libcuckoo_cuckoohash_map
   absl_flat_hash_map2
   absl_node_hash_map2
   )
@@ -64,7 +62,6 @@ target_compile_definitions(spp_sparse_hash_map PRIVATE "MBM_MAP_ALGORITHM=4")
 target_compile_definitions(tsl_hopscotch_map PRIVATE "MBM_MAP_ALGORITHM=5")
 target_compile_definitions(tsl_robin_map PRIVATE "MBM_MAP_ALGORITHM=6")
 target_compile_definitions(robin_hood_unordered_map PRIVATE "MBM_MAP_ALGORITHM=7")
-target_compile_definitions(libcuckoo_cuckoohash_map PRIVATE "MBM_MAP_ALGORITHM=8")
 target_compile_definitions(absl_flat_hash_map2 PRIVATE "MBM_MAP_ALGORITHM=10")
 target_compile_definitions(absl_node_hash_map2 PRIVATE "MBM_MAP_ALGORITHM=11")
 
