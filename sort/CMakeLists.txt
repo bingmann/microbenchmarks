@@ -15,7 +15,7 @@ set(PROGRAM_LIST
 foreach(F ${PROGRAM_LIST})
 
   add_executable(${F} mbm_sort.cpp)
-  target_link_libraries(${F} ${MBM_LINK_LIBRARIES} atomic)
+  target_link_libraries(${F} ${MBM_LINK_LIBRARIES} atomic TBB::tbb)
 
 endforeach()
 
@@ -38,9 +38,6 @@ target_compile_definitions(parallel_msd_radix_sort
   PRIVATE "MBM_ALGORITHM=ParallelMSDRadixSort")
 target_compile_definitions(parallel_lsd_radix_sort
   PRIVATE "MBM_ALGORITHM=ParallelLSDRadixSort")
-
-# additional libraries
-target_link_libraries(tbb_parallel_sort tbb)
 
 # write batch file
 WriteRunAllBatch("${CMAKE_CURRENT_BINARY_DIR}/run_all.sh" "${PROGRAM_LIST}")

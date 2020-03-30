@@ -108,7 +108,7 @@ add_subdirectory(extlib/abseil-cpp)
 
 include(extlib/oneTBB/cmake/TBBBuild.cmake)
 tbb_build(TBB_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/extlib/oneTBB CONFIG_DIR TBB_DIR)
-find_package(TBB)
+find_package(TBB COMPONENTS tbb)
 
 ################################################################################
 ### Macros
