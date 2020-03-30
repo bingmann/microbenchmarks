@@ -41,7 +41,7 @@
 const size_t min_items = 125;
 
 //! maximum number of items to insert
-const size_t max_items = 1024000 * 64;
+const size_t max_items = 1024000 * 16;
 
 //! maximum number of items to insert
 const size_t target_items = 1024000 * 16;
@@ -373,7 +373,7 @@ void TestFactory_Set<TestClass>::call_testrunner(size_t size) {
 #elif MBM_SET_ALGORITHM == 16
     testrunner_loop<BtreeSet<256>>(size, "tlx::btree_multiset<256>");
 #elif MBM_SET_ALGORITHM == 20
-    if (size <= 128000)
+    if (size <= 16000)
         testrunner_loop<BoostFlatSet>(size, "boost::flat_multiset");
 #elif MBM_SET_ALGORITHM == 21
     testrunner_loop<GoogleBTreeSet>(size, "google btree_set");
@@ -405,7 +405,7 @@ void TestFactory_Map<TestClass>::call_testrunner(size_t size) {
 #elif MBM_MAP_ALGORITHM == 16
     testrunner_loop<BtreeMap<256>>(size, "tlx::btree_multimap<256>");
 #elif MBM_MAP_ALGORITHM == 20
-    if (size <= 128000)
+    if (size <= 16000)
         testrunner_loop<BoostFlatMap>(size, "boost::flat_multimap");
 #elif MBM_MAP_ALGORITHM == 21
     testrunner_loop<GoogleBTreeMap>(size, "google btree_map");
