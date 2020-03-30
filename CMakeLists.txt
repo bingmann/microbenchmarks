@@ -77,6 +77,15 @@ endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
+### use OpenMP ###
+
+find_package(OpenMP)
+if (OPENMP_FOUND)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+endif()
+
 ### use Boost ###
 
 find_package(Boost 1.42.0 COMPONENTS container)
@@ -94,6 +103,12 @@ set(MBM_LINK_LIBRARIES tlx ${MBM_LINK_LIBRARIES})
 ### use abseil ###
 
 add_subdirectory(extlib/abseil-cpp)
+
+### use oneTBB ###
+
+include(extlib/oneTBB/cmake/TBBBuild.cmake)
+tbb_build(TBB_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/extlib/oneTBB CONFIG_DIR TBB_DIR)
+find_package(TBB)
 
 ################################################################################
 ### Macros

@@ -25,3 +25,6 @@
 [submodule "extlib/abseil-cpp"]
 	path = extlib/abseil-cpp
 	url = https://github.com/abseil/abseil-cpp.git
+[submodule "extlib/oneTBB"]
+	path = extlib/oneTBB
+	url = https://github.com/oneapi-src/oneTBB.git

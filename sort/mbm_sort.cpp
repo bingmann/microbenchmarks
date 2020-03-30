@@ -11,10 +11,22 @@
 #include <microbenchmarking.hpp>
 
 #include <tlx/die.hpp>
+#include <tlx/string/contains.hpp>
 
 #include <algorithm>
 #include <iostream>
 #include <random>
+
+/******************************************************************************/
+// Settings
+
+//! starting number of items to insert
+const size_t min_size = 1024 * 1024;
+
+//! maximum number of items to insert
+const size_t max_size = 512 * 1024 * 1024;
+
+/******************************************************************************/
 
 struct MyStruct {
     uint32_t a, b;
@@ -127,6 +139,56 @@ public:
     }
 };
 
+#include <tbb/parallel_sort.h>
+
+class TBBParallelSort : public SortBenchmark {
+public:
+    TBBParallelSort(size_t size, size_t rep) : SortBenchmark(size, rep) {
+    }
+    const char* name() const final {
+        return "tbb::parallel_sort";
+    }
+    void run() {
+        tbb::parallel_sort(vec_.begin(), vec_.end(), cmp_);
+    }
+};
+
+#include "extra/msd_parallel_radixsort.hpp"
+
+uint8_t radix_extract_key(const MyStruct& s, size_t depth)
+{
+    return tlx::parallel_radixsort_detail::get_key<uint32_t, uint8_t>(s.a, depth);
+}
+
+class ParallelMSDRadixSort : public SortBenchmark {
+public:
+    ParallelMSDRadixSort(size_t size, size_t rep) : SortBenchmark(size, rep) {
+    }
+    const char* name() const final {
+        return "parallel_msd_radixsort";
+    }
+    void run() {
+        tlx::parallel_radixsort_detail::radix_sort<
+            std::vector<MyStruct>::iterator, radix_extract_key>(
+            vec_.begin(), vec_.end(), sizeof(uint32_t));
+    }
+};
+
+#include "extra/lsd_radix_sort_prefix.hpp"
+
+class ParallelLSDRadixSort : public SortBenchmark {
+public:
+    ParallelLSDRadixSort(size_t size, size_t rep) : SortBenchmark(size, rep) {
+    }
+    const char* name() const final {
+        return "parallel_lsd_radixsort";
+    }
+    void run() {
+        auto getter = [](const MyStruct& s) { return s.a; };
+        rdx::radix_sort_prefix_par(vec_.begin(), vec_.end(), getter);
+    }
+};
+
 /******************************************************************************/
 
 template <typename Benchmark>
@@ -147,10 +209,17 @@ void test_size(size_t size, size_t rep) {
     mbm.run_check_print(Benchmark(size, rep));
 }
 
+#define QUOTE(string) #string
+
 int main() {
-    for (size_t size = 1024; size < 32 * 1024 * 1024; size = 2 * size) {
+    for (size_t size = min_size; size <= max_size; size = 2 * size) {
+        if (tlx::contains(QUOTE(MBM_ALGORITHM), "Parallel")) {
+            if (size > 8 * 1024 * 1024)
+                continue;
+        }
+
         size_t f = (8 * 1024 * 1024) / size;
-        for (size_t rep = 0; rep < std::min<size_t>(1000, 100 * f); ++rep) {
+        for (size_t rep = 0; rep < std::max<size_t>(10, 100 * f); ++rep) {
             // MBM_ALGORITHM is defined from cmake to select algorithm
             test_size<MBM_ALGORITHM>(size, rep);
 

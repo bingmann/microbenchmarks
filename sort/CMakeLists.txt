@@ -8,7 +8,8 @@
 
 set(PROGRAM_LIST
   std_sort std_stable_sort ips4o_sort ips4o_parallel_sort
-  mcstl_parallel_mergesort
+  mcstl_parallel_mergesort parallel_msd_radix_sort parallel_lsd_radix_sort
+  tbb_parallel_sort
   )
 
 foreach(F ${PROGRAM_LIST})
@@ -29,6 +30,17 @@ target_compile_definitions(ips4o_parallel_sort
   PRIVATE "MBM_ALGORITHM=IPS4oParallelSort")
 target_compile_definitions(mcstl_parallel_mergesort
   PRIVATE "MBM_ALGORITHM=MCSTLParallelMergesort")
+target_compile_definitions(tbb_parallel_sort
+  PRIVATE "MBM_ALGORITHM=TBBParallelSort")
+target_compile_definitions(mcstl_parallel_mergesort
+  PRIVATE "MBM_ALGORITHM=MCSTLParallelMergesort")
+target_compile_definitions(parallel_msd_radix_sort
+  PRIVATE "MBM_ALGORITHM=ParallelMSDRadixSort")
+target_compile_definitions(parallel_lsd_radix_sort
+  PRIVATE "MBM_ALGORITHM=ParallelLSDRadixSort")
+
+# additional libraries
+target_link_libraries(tbb_parallel_sort tbb)
 
 # write batch file
 WriteRunAllBatch("${CMAKE_CURRENT_BINARY_DIR}/run_all.sh" "${PROGRAM_LIST}")
