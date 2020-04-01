@@ -136,6 +136,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(ordered_sets)
 add_subdirectory(sort)
+add_subdirectory(sort_parallel)
 add_subdirectory(unordered_sets)
 
 add_executable(results_to_tsv results_to_tsv.cpp)

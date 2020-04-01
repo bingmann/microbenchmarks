@@ -1,7 +1,7 @@
 /*******************************************************************************
- * mbm_sort.cpp
+ * mbm_sort_parallel.cpp
  *
- * Microbenchmark sorting algorithms
+ * Microbenchmark parallel sorting algorithms
  *
  * Copyright (C) 2020 Timo Bingmann <tb@panthema.net>
  *
@@ -21,10 +21,10 @@
 // Settings
 
 //! starting number of items to insert
-const size_t min_size = 64 * 1024;
+const size_t min_size = 1024 * 1024;
 
 //! maximum number of items to insert
-const size_t max_size = 8 * 1024 * 1024;
+const size_t max_size = 512 * 1024 * 1024;
 
 /******************************************************************************/
 
@@ -70,43 +70,83 @@ public:
 };
 
 /******************************************************************************/
-// Sequential Sorters
-
-class StdSort : public SortBenchmark {
-public:
-    StdSort(size_t size, size_t rep) : SortBenchmark(size, rep) {
-    }
-    const char* name() const final {
-        return "std::sort";
-    }
-    void run() {
-        std::sort(vec_.begin(), vec_.end(), cmp_);
-    }
-};
-
-class StdStableSort : public SortBenchmark {
-public:
-    StdStableSort(size_t size, size_t rep) : SortBenchmark(size, rep) {
-    }
-    const char* name() const final {
-        return "std::stable_sort";
-    }
-    void run() {
-        std::stable_sort(vec_.begin(), vec_.end(), cmp_);
-    }
-};
+// Parallel Sorters
 
 #include "ips4o/ips4o.hpp"
 
-class IPS4oSequentialSort : public SortBenchmark {
+class IPS4oParallelSort : public SortBenchmark {
 public:
-    IPS4oSequentialSort(size_t size, size_t rep) : SortBenchmark(size, rep) {
+    IPS4oParallelSort(size_t size, size_t rep) : SortBenchmark(size, rep) {
     }
     const char* name() const final {
-        return "ips4o::(sequential_)sort";
+        return "ips4o::parallel_sort";
     }
     void run() {
-        ips4o::sort(vec_.begin(), vec_.end(), cmp_);
+        ips4o::parallel::sort(vec_.begin(), vec_.end(), cmp_);
+    }
+};
+
+#include <tlx/sort/parallel_mergesort.hpp>
+
+class MCSTLParallelMergesort : public SortBenchmark {
+public:
+    MCSTLParallelMergesort(size_t size, size_t rep) : SortBenchmark(size, rep) {
+    }
+    const char* name() const final {
+        return "mcstl::parallel_sort";
+    }
+    void run() {
+        tlx::parallel_mergesort(vec_.begin(), vec_.end(), cmp_);
+    }
+};
+
+#include <tbb/parallel_sort.h>
+
+class TBBParallelSort : public SortBenchmark {
+public:
+    TBBParallelSort(size_t size, size_t rep) : SortBenchmark(size, rep) {
+    }
+    const char* name() const final {
+        return "tbb::parallel_sort";
+    }
+    void run() {
+        tbb::parallel_sort(vec_.begin(), vec_.end(), cmp_);
+    }
+};
+
+#include "extra/msd_parallel_radixsort.hpp"
+
+uint8_t radix_extract_key(const MyStruct& s, size_t depth)
+{
+    return tlx::parallel_radixsort_detail::get_key<uint32_t, uint8_t>(s.a, depth);
+}
+
+class ParallelMSDRadixSort : public SortBenchmark {
+public:
+    ParallelMSDRadixSort(size_t size, size_t rep) : SortBenchmark(size, rep) {
+    }
+    const char* name() const final {
+        return "parallel_msd_radixsort";
+    }
+    void run() {
+        tlx::parallel_radixsort_detail::radix_sort<
+            std::vector<MyStruct>::iterator, radix_extract_key>(
+            vec_.begin(), vec_.end(), sizeof(uint32_t));
+    }
+};
+
+#include "extra/lsd_radix_sort_prefix.hpp"
+
+class ParallelLSDRadixSort : public SortBenchmark {
+public:
+    ParallelLSDRadixSort(size_t size, size_t rep) : SortBenchmark(size, rep) {
+    }
+    const char* name() const final {
+        return "parallel_lsd_radixsort";
+    }
+    void run() {
+        auto getter = [](const MyStruct& s) { return s.a; };
+        rdx::radix_sort_prefix_par(vec_.begin(), vec_.end(), getter);
     }
 };
 
@@ -130,21 +170,12 @@ void test_size(size_t size, size_t rep) {
     mbm.run_check_print(Benchmark(size, rep));
 }
 
-#define QUOTE(string) #string
-
 int main() {
     for (size_t size = min_size; size <= max_size; size = 2 * size) {
         size_t f = (8 * 1024 * 1024) / size;
         for (size_t rep = 0; rep < std::max<size_t>(10, 100 * f); ++rep) {
             // MBM_ALGORITHM is defined from cmake to select algorithm
             test_size<MBM_ALGORITHM>(size, rep);
-
-            // test_size<StdSort>(size, rep);
-            // test_size<StdStableSort>(size, rep);
-            // test_size<IPS4oSequentialSort>(size, rep);
-
-            // test_size<IPS4oParallelSort>(size, rep);
-            // test_size<MCSTLParallelMergesort>(size, rep);
         }
     }
 

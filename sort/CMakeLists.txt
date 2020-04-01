@@ -7,15 +7,13 @@
 ################################################################################
 
 set(PROGRAM_LIST
-  std_sort std_stable_sort ips4o_sort ips4o_parallel_sort
-  mcstl_parallel_mergesort parallel_msd_radix_sort parallel_lsd_radix_sort
-  tbb_parallel_sort
+  std_sort std_stable_sort ips4o_sequential_sort
   )
 
 foreach(F ${PROGRAM_LIST})
 
   add_executable(${F} mbm_sort.cpp)
-  target_link_libraries(${F} ${MBM_LINK_LIBRARIES} atomic TBB::tbb)
+  target_link_libraries(${F} ${MBM_LINK_LIBRARIES} atomic)
 
 endforeach()
 
@@ -24,20 +22,8 @@ target_compile_definitions(std_sort
   PRIVATE "MBM_ALGORITHM=StdSort")
 target_compile_definitions(std_stable_sort
   PRIVATE "MBM_ALGORITHM=StdStableSort")
-target_compile_definitions(ips4o_sort
-  PRIVATE "MBM_ALGORITHM=IPS4oSort")
-target_compile_definitions(ips4o_parallel_sort
-  PRIVATE "MBM_ALGORITHM=IPS4oParallelSort")
-target_compile_definitions(mcstl_parallel_mergesort
-  PRIVATE "MBM_ALGORITHM=MCSTLParallelMergesort")
-target_compile_definitions(tbb_parallel_sort
-  PRIVATE "MBM_ALGORITHM=TBBParallelSort")
-target_compile_definitions(mcstl_parallel_mergesort
-  PRIVATE "MBM_ALGORITHM=MCSTLParallelMergesort")
-target_compile_definitions(parallel_msd_radix_sort
-  PRIVATE "MBM_ALGORITHM=ParallelMSDRadixSort")
-target_compile_definitions(parallel_lsd_radix_sort
-  PRIVATE "MBM_ALGORITHM=ParallelLSDRadixSort")
+target_compile_definitions(ips4o_sequential_sort
+  PRIVATE "MBM_ALGORITHM=IPS4oSequentialSort")
 
 # write batch file
 WriteRunAllBatch("${CMAKE_CURRENT_BINARY_DIR}/run_all.sh" "${PROGRAM_LIST}")
